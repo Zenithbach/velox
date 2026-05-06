@@ -9,9 +9,7 @@
 # Think of it as a browser that only knows one website
 # and takes its job very seriously.
 
-import sys
-
-from PyQt6.QtCore import QUrl, Qt
+from PyQt6.QtCore import QUrl
 from PyQt6.QtWebEngineCore import (
     QWebEnginePage,
     QWebEngineProfile,
@@ -19,7 +17,7 @@ from PyQt6.QtWebEngineCore import (
 )
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 
-from app.constants import CLAUDE_URL, USER_AGENT, CONFIG_DIR
+from app.constants import CLAUDE_URL, USER_AGENT
 from app.security import DomainFilter
 from app.cookie_store import CookieManager
 

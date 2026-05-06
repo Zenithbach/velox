@@ -9,7 +9,6 @@
 import os
 import copy
 import toml
-from pathlib import Path
 
 from app.constants import CONFIG_DIR, CONFIG_FILE, DEFAULT_CONFIG
 

@@ -7,8 +7,8 @@
 # Remembers where you left it because nobody likes re-arranging
 # their windows every time they launch an app.
 
-from PyQt6.QtCore import Qt, QSize, QPoint
-from PyQt6.QtGui import QAction, QKeySequence, QIcon
+from PyQt6.QtCore import QSize, QPoint
+from PyQt6.QtGui import QAction, QKeySequence
 from PyQt6.QtWidgets import QMainWindow, QApplication
 
 from app.webview import VeloxWebView

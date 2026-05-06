@@ -17,11 +17,10 @@ import os
 import json
 import base64
 from pathlib import Path
-from datetime import datetime
 
 from PyQt6.QtNetwork import QNetworkCookie
-from PyQt6.QtWebEngineCore import QWebEngineProfile, QWebEngineCookieStore
-from PyQt6.QtCore import QByteArray, QUrl
+from PyQt6.QtWebEngineCore import QWebEngineProfile
+from PyQt6.QtCore import QByteArray
 
 from app.constants import COOKIE_DIR
 
@@ -219,12 +218,17 @@ class CookieManager:
             print(f"🍪 Couldn't save cookies: {e}")
             print("   Your session is fine in memory, just won't survive a restart.")
 
-    # ─── Encryption Layer ────────────────────────────────────────────────
-    # Simple base64 + keyring for now. The keyring (KDE Wallet) provides
-    # the actual security. The base64 just keeps the data from being
-    # casually readable if someone cats the file.
+    # ─── Encoding Layer ────────────────────────────────────────────────
+    # Let's be honest: this is base64 encoding, not real encryption.
+    # The actual protection comes from file permissions (600) and
+    # the config directory being locked to 700.
     #
-    # For v2, consider Fernet encryption with a keyring-stored key.
+    # The keyring stores a verification marker so we know the file
+    # was written by us, but the data itself is just encoded.
+    #
+    # For v2: Fernet encryption with a keyring-stored key. Real crypto.
+    # For now: this keeps cookies from being casually readable if
+    # someone cats the file, and the OS permissions do the rest.
 
     @staticmethod
     def _encrypt(data: str) -> bytes:

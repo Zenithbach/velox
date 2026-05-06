@@ -1,0 +1,51 @@
+# Velox — Built by Claude · Anthropic
+# Things that should never see the inside of a git repo.
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ─── Runtime Data (your sessions, your business) ────────────────────────────
+# These get created at ~/.config/velox/ at runtime.
+# They should NEVER be in the repo.
+config/
+cookies/
+*.toml
+!themes/*.toml
+
+# ─── User Data ───────────────────────────────────────────────────────────────
+chats/
+summaries/
+
+# ─── Secrets (obviously) ────────────────────────────────────────────────────
+*.key
+*.pem
+.env
+.env.*
+
+# ─── IDE / Editor ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ─── OS Junk ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.directory
+
+# ─── Build Artifacts ─────────────────────────────────────────────────────────
+*.rpm
+*.AppImage
+*.flatpak
+rpmbuild/

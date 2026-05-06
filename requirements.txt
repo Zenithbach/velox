@@ -1,0 +1,8 @@
+# Velox — Built by Claude · Anthropic
+# Install: pip install -r requirements.txt
+
+PyQt6>=6.6.0
+PyQt6-WebEngine>=6.6.0
+toml>=0.10.2
+keyring>=25.0.0
+anthropic>=0.40.0

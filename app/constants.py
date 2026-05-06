@@ -46,6 +46,14 @@ ALLOWED_DOMAINS = [
     "*.claude.ai",
     "*.anthropic.com",
 
+    # Cloudflare — claude.ai sits behind Cloudflare for DDoS/bot protection.
+    # Without these, you get stuck on "Performing security verification" forever.
+    # Learned this the fun way on first launch. 🎉
+    "*.cloudflare.com",
+    "challenges.cloudflare.com",
+    "*.cloudflareinsights.com",
+    "*.turnstile.com",           # Cloudflare's CAPTCHA alternative
+
     # CDN / static assets (claude.ai frontend dependencies)
     "cdn.claude.ai",
     "*.cloudfront.net",          # AWS CloudFront — commonly used for static assets

@@ -15,19 +15,23 @@ import os
 # That's why they're up here, not buried in a module somewhere.
 #
 # GPU acceleration: makes scrolling smooth and rendering fast.
-# Wayland native: no XWayland translation layer, direct Wayland.
+# Wayland: handled by Qt's own platform plugin (QT_QPA_PLATFORM),
+#   NOT by Chromium's ozone flag — Fedora's QtWebEngine doesn't support
+#   --ozone-platform=wayland and will crash if you try. Ask us how we know.
 # Sandbox: stays ON for security (Chromium's process isolation).
 
 os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS",
     "--enable-gpu-rasterization "
     "--enable-features=VaapiVideoDecoder "
-    "--ozone-platform=wayland "
     "--enable-wayland-ime"
 )
 
-# Force Qt to use the Wayland platform plugin
-# (falls back to xcb automatically if Wayland isn't available)
-os.environ.setdefault("QT_QPA_PLATFORM", "wayland;xcb")
+# Let Qt pick the best platform plugin.
+# On KDE Plasma Wayland this will use wayland natively.
+# Falls back to xcb (X11) if Wayland isn't available.
+# We don't force it — Qt and your desktop know best.
+if "QT_QPA_PLATFORM" not in os.environ:
+    pass  # Let Qt auto-detect. Forcing can cause issues on some setups.
 
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt

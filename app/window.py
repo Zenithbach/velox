@@ -23,7 +23,7 @@ class VeloxWindow(QMainWindow):
     - Host the webview
     - Save/restore geometry between sessions
     - Handle zoom shortcuts
-    - Close-to-tray behavior (Phase 2 — for now it just quits)
+    - Close-to-tray behavior (hides instead of quitting)
     - Set the window title and icon
 
     This is deliberately simple. The webview does the real work.
@@ -33,6 +33,8 @@ class VeloxWindow(QMainWindow):
     def __init__(self, settings, parent=None):
         super().__init__(parent)
         self._settings = settings
+        self._tray = None  # Set later via set_tray()
+        self._force_quit = False  # True when quitting for real, not hiding
 
         # ─── Window Properties ───────────────────────────────────────
 
@@ -70,6 +72,14 @@ class VeloxWindow(QMainWindow):
     def webview(self) -> VeloxWebView:
         """Access the webview (for other modules that need it)."""
         return self._webview
+
+    def set_tray(self, tray):
+        """
+        Connect the tray icon to this window.
+        Called by main.py after both window and tray are created.
+        Once set, closing the window hides to tray instead of quitting.
+        """
+        self._tray = tray
 
     def toggle_visibility(self):
         """
@@ -164,11 +174,21 @@ class VeloxWindow(QMainWindow):
     def closeEvent(self, event):
         """
         Handle window close.
-        Phase 1: just save state and quit.
-        Phase 2: close-to-tray behavior (hide instead of quit).
+        If tray is active: hide to tray (app keeps running).
+        If no tray or force-quitting: save state and actually close.
+
+        This is why closing the window doesn't kill the app.
+        Click the X → window hides. Click "Quit" in tray → actually quits.
         """
-        self._save_state()
-        event.accept()
+        if self._tray and self._tray.isVisible() and not self._force_quit:
+            # Hide to tray instead of closing
+            self._save_geometry()
+            self.hide()
+            event.ignore()
+        else:
+            # Actually quitting
+            self._save_state()
+            event.accept()
 
     def _save_state(self):
         """Save all persistent state before exit."""
@@ -179,5 +199,6 @@ class VeloxWindow(QMainWindow):
 
     def _on_quit(self):
         """Clean quit from keyboard shortcut."""
+        self._force_quit = True
         self._save_state()
         QApplication.quit()

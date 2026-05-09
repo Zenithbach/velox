@@ -32,11 +32,14 @@ os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS",
 # We don't force it — Qt and your desktop know best.
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import Qt
 
 from app.constants import APP_NAME, APP_VERSION, STARTUP_BANNER
 from app.settings import Settings
 from app.window import VeloxWindow
+from app.tray import VeloxTray
+from app.notifications import NotificationManager
+from app.downloads import DownloadManager
+from app.theme import ThemeManager
 
 
 def main():
@@ -56,21 +59,52 @@ def main():
     # Set the desktop filename so KDE associates us with our .desktop file
     app.setDesktopFileName("velox")
 
-    # Don't quit when the last window is hidden (needed for close-to-tray in Phase 2)
-    app.setQuitOnLastWindowClosed(True)  # Phase 2: change to False when tray is added
+    # Don't quit when the last window is hidden — tray keeps us alive
+    app.setQuitOnLastWindowClosed(False)
 
     # ─── Settings ────────────────────────────────────────────────────
 
     settings = Settings()
 
+    # ─── Theme ───────────────────────────────────────────────────────
+    # Apply theme before creating any widgets so colors are right from the start
+
+    theme_manager = ThemeManager(settings)
+
     # ─── Main Window ─────────────────────────────────────────────────
 
     window = VeloxWindow(settings)
 
-    # Check if we should start minimized (usually not, but it's configurable)
+    # ─── Tray Icon ───────────────────────────────────────────────────
+
+    tray = VeloxTray(window, settings)
+
+    # Apply themed stylesheet to the tray menu
+    tray.contextMenu().setStyleSheet(theme_manager.get_stylesheet())
+
+    # Tell the window about the tray so it can hide-to-tray on close
+    window.set_tray(tray)
+
+    # ─── Notifications ───────────────────────────────────────────────
+
+    notifications = NotificationManager(tray, settings)
+
+    # ─── Downloads ───────────────────────────────────────────────────
+    # Wire into the webview's profile so we catch download requests
+
+    download_manager = DownloadManager(
+        profile=window.webview._profile,
+        settings=settings,
+        notifications=notifications,
+    )
+
+    # ─── Start Everything ────────────────────────────────────────────
+
+    tray.start()
+
     if settings.get("window", "start_minimized", False):
-        print("🪟 Starting minimized (start_minimized is on)")
-        # Phase 2: this will minimize to tray instead
+        print("🪟 Starting minimized to tray")
+        window.webview.start()  # Load the page even if window is hidden
     else:
         window.start()
 

@@ -81,6 +81,45 @@ class VeloxWindow(QMainWindow):
         """
         self._tray = tray
 
+    def set_phase3(self, focus_mode=None, code_tools=None, chat_export=None):
+        """
+        Connect Phase 3 modules to the window for keyboard shortcuts.
+        Called by main.py after all modules are created.
+        """
+        self._focus_mode = focus_mode
+        self._code_tools = code_tools
+        self._chat_export = chat_export
+
+        # Add Phase 3 shortcuts now that modules are available
+        if focus_mode:
+            focus_action = QAction("Focus Mode", self)
+            focus_action.setShortcut(QKeySequence("F11"))
+            focus_action.triggered.connect(focus_mode.toggle)
+            self.addAction(focus_action)
+
+            # Escape also exits focus mode
+            escape_action = QAction("Exit Focus", self)
+            escape_action.setShortcut(QKeySequence("Escape"))
+            escape_action.triggered.connect(self._escape_pressed)
+            self.addAction(escape_action)
+
+        if code_tools:
+            copy_code_action = QAction("Copy All Code", self)
+            copy_code_action.setShortcut(QKeySequence("Ctrl+Shift+C"))
+            copy_code_action.triggered.connect(code_tools.copy_all_code_blocks)
+            self.addAction(copy_code_action)
+
+        if chat_export:
+            save_action = QAction("Save Chat", self)
+            save_action.setShortcut(QKeySequence("Ctrl+S"))
+            save_action.triggered.connect(chat_export.save_current_chat)
+            self.addAction(save_action)
+
+    def _escape_pressed(self):
+        """Handle Escape key — exits focus mode if active."""
+        if hasattr(self, '_focus_mode') and self._focus_mode and self._focus_mode.is_active:
+            self._focus_mode.deactivate()
+
     def toggle_visibility(self):
         """
         Show if hidden, hide if shown. Used by global hotkey and tray icon.

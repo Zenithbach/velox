@@ -11,9 +11,9 @@ import random
 
 from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
 from PyQt6.QtGui import QIcon, QPixmap, QPainter, QColor, QBrush, QPen
-from PyQt6.QtCore import Qt, QSize, QRect, QPoint
+from PyQt6.QtCore import Qt
 
-from app.constants import APP_NAME, TRAY_TOOLTIPS
+from app.constants import TRAY_TOOLTIPS
 
 
 def _generate_placeholder_icon() -> QIcon:
@@ -121,6 +121,12 @@ class VeloxTray(QSystemTrayIcon):
         else:
             print("🔲 Tray icon disabled in config.")
 
+    def set_phase3(self, focus_mode=None, code_tools=None, chat_export=None):
+        """Connect Phase 3 modules for tray menu actions."""
+        self._focus_mode = focus_mode
+        self._code_tools = code_tools
+        self._chat_export = chat_export
+
     # ─── Menu Construction ───────────────────────────────────────────────
 
     def _build_menu(self):
@@ -129,6 +135,20 @@ class VeloxTray(QSystemTrayIcon):
         # Show / Hide
         show_action = self._menu.addAction("Show / Hide Window")
         show_action.triggered.connect(self._toggle_window)
+
+        self._menu.addSeparator()
+
+        # Focus Mode (Phase 3)
+        self._focus_action = self._menu.addAction("🧘 Focus Mode")
+        self._focus_action.triggered.connect(self._toggle_focus)
+
+        # Save Chat (Phase 3)
+        self._save_action = self._menu.addAction("💾 Save Chat")
+        self._save_action.triggered.connect(self._save_chat)
+
+        # Copy All Code (Phase 3)
+        self._copy_code_action = self._menu.addAction("💻 Copy All Code")
+        self._copy_code_action.triggered.connect(self._copy_code)
 
         self._menu.addSeparator()
 
@@ -163,6 +183,27 @@ class VeloxTray(QSystemTrayIcon):
         """Reload claude.ai in the webview."""
         self._window.webview.reload()
         print("🔄 Reloading claude.ai...")
+
+    def _toggle_focus(self):
+        """Toggle focus mode from tray menu."""
+        if hasattr(self, '_focus_mode') and self._focus_mode:
+            self._focus_mode.toggle()
+        else:
+            print("🧘 Focus mode not available yet.")
+
+    def _save_chat(self):
+        """Save current chat from tray menu."""
+        if hasattr(self, '_chat_export') and self._chat_export:
+            self._chat_export.save_current_chat()
+        else:
+            print("💾 Chat export not available yet.")
+
+    def _copy_code(self):
+        """Copy all code blocks from tray menu."""
+        if hasattr(self, '_code_tools') and self._code_tools:
+            self._code_tools.copy_all_code_blocks()
+        else:
+            print("💻 Code tools not available yet.")
 
     def _logout(self):
         """Clear cookies and reload. You'll need to log in again."""

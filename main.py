@@ -40,6 +40,10 @@ from app.tray import VeloxTray
 from app.notifications import NotificationManager
 from app.downloads import DownloadManager
 from app.theme import ThemeManager
+from app.focus_mode import FocusMode
+from app.code_tools import CodeTools
+from app.chat_export import ChatExport
+from app.chat_summarizer import ChatSummarizer
 
 
 def main():
@@ -98,6 +102,42 @@ def main():
         notifications=notifications,
     )
 
+    # ─── Focus Mode ──────────────────────────────────────────────────
+
+    focus_mode = FocusMode(window.webview, settings)
+
+    # ─── Code Tools ──────────────────────────────────────────────────
+
+    code_tools = CodeTools(window.webview)
+
+    # ─── Chat Export ─────────────────────────────────────────────────
+
+    chat_export = ChatExport(
+        window.webview, settings, notifications=notifications
+    )
+
+    # ─── Chat Summarizer ─────────────────────────────────────────────
+
+    summarizer = ChatSummarizer(
+        window.webview, settings, notifications=notifications
+    )
+
+    # ─── Wire Phase 3 into Window ────────────────────────────────────
+    # Give the window access to these modules for keyboard shortcuts
+
+    window.set_phase3(
+        focus_mode=focus_mode,
+        code_tools=code_tools,
+        chat_export=chat_export,
+    )
+
+    # Give the tray access for menu items
+    tray.set_phase3(
+        focus_mode=focus_mode,
+        code_tools=code_tools,
+        chat_export=chat_export,
+    )
+
     # ─── Start Everything ────────────────────────────────────────────
 
     tray.start()
@@ -107,6 +147,9 @@ def main():
         window.webview.start()  # Load the page even if window is hidden
     else:
         window.start()
+
+    # Start the summarizer after the page is loading
+    summarizer.start()
 
     # ─── Run ─────────────────────────────────────────────────────────
 

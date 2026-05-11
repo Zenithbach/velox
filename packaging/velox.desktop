@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Velox
+GenericName=Claude Desktop Client
+Comment=A lightweight native desktop client for claude.ai
+Exec=velox
+Icon=velox
+Terminal=false
+Categories=Network;Chat;Utility;
+Keywords=claude;ai;chat;anthropic;
+StartupNotify=true
+StartupWMClass=velox
+MimeType=

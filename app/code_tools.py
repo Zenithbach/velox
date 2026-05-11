@@ -8,6 +8,9 @@
 # Extracts all code blocks from the current conversation view
 # and copies them to the clipboard as a single concatenated block,
 # with language labels so you know what's what.
+#
+# Configurable: [code_tools] mode = "all" or "last"
+# "all" grabs the whole conversation, "last" grabs just the last response.
 
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QObject
@@ -18,33 +21,44 @@ class CodeTools(QObject):
     Code extraction utilities for the webview.
 
     Main feature: "Copy All Code Blocks" — grabs every <code> block
-    from the most recent assistant response (or the whole conversation)
+    from the conversation (or just the last response, configurable)
     and puts them on the clipboard in one shot.
     """
 
-    def __init__(self, webview, parent=None):
+    def __init__(self, webview, settings=None, parent=None):
         super().__init__(parent)
         self._webview = webview
+        self._settings = settings
 
     def copy_all_code_blocks(self):
         """
-        Extract all code blocks from the conversation and copy to clipboard.
+        Copy code blocks based on the configured mode.
+        Mode "all" = whole conversation, "last" = last response only.
+        Configurable in velox.toml: [code_tools] mode = "all"
+        """
+        mode = "all"
+        if self._settings:
+            mode = self._settings.get("code_tools", "mode", "all")
 
-        Targets the last assistant response by default. Each block is labeled
-        with its language (if detectable) and separated by dividers.
+        if mode == "last":
+            self._copy_from_last_response()
+        else:
+            self._copy_from_all()
+
+    def _copy_from_all(self):
+        """
+        Extract all code blocks from the entire conversation.
 
         Result on clipboard looks like:
-            ── python ──
+            -- python --
             def hello():
                 print("world")
 
-            ── bash ──
+            -- bash --
             echo "hello"
         """
         js = """
         (function() {
-            // Find all code blocks in the conversation
-            // claude.ai uses <pre><code> for code blocks
             let blocks = document.querySelectorAll('pre code, pre');
             let results = [];
 
@@ -53,11 +67,9 @@ class CodeTools(QObject):
                 code = code.trim();
                 if (!code) continue;
 
-                // Try to detect the language from class names
-                // claude.ai typically uses class="language-python" etc.
                 let lang = 'code';
                 let classes = (block.className || '') + ' ' + (block.parentElement?.className || '');
-                let match = classes.match(/language-(\w+)/);
+                let match = classes.match(/language-(\\w+)/);
                 if (match) {
                     lang = match[1];
                 }
@@ -69,7 +81,6 @@ class CodeTools(QObject):
                 return JSON.stringify({count: 0, text: ''});
             }
 
-            // Format with language headers
             let formatted = results.map(r => {
                 return '── ' + r.lang + ' ──\\n' + r.code;
             }).join('\\n\\n');
@@ -80,29 +91,20 @@ class CodeTools(QObject):
 
         self._webview.page().runJavaScript(js, self._handle_code_result)
 
-    def copy_last_response_code(self):
+    def _copy_from_last_response(self):
         """
         Extract code blocks from only the LAST assistant response.
-        More targeted than copy_all — gets just what Claude just said.
+        More targeted — gets just what Claude just said.
         """
         js = """
         (function() {
-            // Find all assistant response containers
-            // Look for the last one that contains code blocks
-            let responses = document.querySelectorAll(
-                '[data-is-streaming], .font-claude-message, ' +
-                'div[class*="assistant"], div[class*="response"]'
-            );
-
             let targetContainer = null;
 
-            // Walk backwards to find the last response with code
             let allContainers = document.querySelectorAll('div[data-message-author-role="assistant"]');
             if (allContainers.length > 0) {
                 targetContainer = allContainers[allContainers.length - 1];
             }
 
-            // Fallback: just get all code blocks on the page
             let searchRoot = targetContainer || document;
             let blocks = searchRoot.querySelectorAll('pre code, pre');
             let results = [];

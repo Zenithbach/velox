@@ -135,45 +135,78 @@ ABOUT_TAGLINES = [
 # The actual config file is velox.toml — this is just the template.
 
 DEFAULT_CONFIG = {
+    # 🪟 Window — where it lives on your screen
     "window": {
         "width": 1200,
         "height": 800,
         "x": -1,            # -1 means "let the WM decide"
         "y": -1,
         "start_minimized": False,
+        "close_to_tray": True,      # 🫣 False = clicking X actually quits
     },
+    # 🔒 Security — the bouncer settings
     "security": {
         "log_blocked_requests": False,
     },
+    # 🛡️ Permissions — what claude.ai is allowed to access
+    "permissions": {
+        "microphone": True,         # 🎤 Voice input on claude.ai
+        "clipboard": True,          # 📋 Copy/paste (you probably want this)
+        "notifications": True,      # 🔔 "Response ready" alerts from claude.ai
+        "screen_capture": True,     # 📸 Screenshots and screen sharing
+        "camera": False,            # 📷 Claude doesn't need to see you
+        "geolocation": False,       # 📍 Claude doesn't need to find you
+    },
+    # 📥 Downloads — where your artifacts land
     "downloads": {
         "directory": str(DOWNLOAD_DIR),
     },
+    # 🔲 Tray — the little icon in your panel
     "tray": {
         "enabled": True,
     },
+    # ⌨️ Hotkeys — keyboard shortcuts (when window is focused)
     "hotkeys": {
         "toggle_window": "Ctrl+Alt+Space",
         "focus_mode": "F11",
         "save_chat": "Ctrl+S",
     },
+    # 🧘 Focus Mode — distraction-free reading
     "focus_mode": {
-        "hide_input_box": False,
+        "hide_input_box": False,    # 🤐 True = pure reading mode, no input
     },
+    # 💾 Chat Export — saving conversations to markdown
+    "chat_export": {
+        "directory": str(CHAT_EXPORT_DIR),  # 📁 Where chats land
+    },
+    # 🧠 Summarizer — auto-generating conversation summaries
     "summarizer": {
         "enabled": True,
-        "delay_seconds": 30,
-        "model": "claude-haiku-4-5-20251001",
+        "delay_seconds": 30,        # ⏱️ Pause before triggering summary
+        "model": "claude-haiku-4-5-20251001",  # 🤖 Fast and cheap
+        "directory": str(SUMMARY_DIR),  # 📁 Where summaries land
     },
+    # 💻 Code Tools — code block extraction
+    "code_tools": {
+        "mode": "all",              # 🔀 "all" = whole conversation, "last" = last response only
+    },
+    # 🎨 Theme — because everything was brown and we said no
     "theme": {
         "active": "default",
-        "follow_system_theme": False,
+        "follow_system_theme": False,  # 🎭 True = match your KDE theme
     },
+    # 🔔 Notifications — what pings you
     "notifications": {
-        "on_response_complete": True,
-        "on_download_complete": True,
-        "on_summary_update": False,
+        "on_response_complete": True,   # 🦋 Claude finished thinking
+        "on_download_complete": True,   # 📥 File saved
+        "on_summary_update": False,     # 🧠 Summary appended (noisy, off by default)
     },
+    # 🔍 Zoom — how big the text is
     "zoom": {
-        "level": 1.0,
+        "level": 1.0,              # 🔎 1.0 = 100%, 1.5 = 150%, etc.
+    },
+    # 🌐 Advanced — for power users and enterprise setups
+    "advanced": {
+        "start_url": str(CLAUDE_URL),  # 🏠 Change this if you're on enterprise Claude
     },
 }

@@ -12,6 +12,7 @@
 
 import re
 from datetime import datetime
+from pathlib import Path
 
 from PyQt6.QtCore import QObject
 
@@ -33,8 +34,11 @@ class ChatExport(QObject):
         self._settings = settings
         self._notifications = notifications
 
-        # Ensure the export directory exists
-        CHAT_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+        # Get export directory from config, with fallback
+        self._export_dir = Path(
+            settings.get("chat_export", "directory", str(CHAT_EXPORT_DIR))
+        )
+        self._export_dir.mkdir(parents=True, exist_ok=True)
 
     def save_current_chat(self):
         """
@@ -155,7 +159,7 @@ class ChatExport(QObject):
 
         # Generate filename
         filename = self._generate_filename(title)
-        filepath = CHAT_EXPORT_DIR / filename
+        filepath = self._export_dir / filename
 
         # Write it
         try:
@@ -166,7 +170,7 @@ class ChatExport(QObject):
                 self._notifications.notify(
                     title="Chat Saved",
                     message=f"💾 {filename}",
-                    subtitle=str(CHAT_EXPORT_DIR),
+                    subtitle=str(self._export_dir),
                 )
         except OSError as e:
             print(f"💾 ❌ Couldn't save chat: {e}")

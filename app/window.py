@@ -213,19 +213,18 @@ class VeloxWindow(QMainWindow):
     def closeEvent(self, event):
         """
         Handle window close.
-        If tray is active: hide to tray (app keeps running).
-        If no tray or force-quitting: save state and actually close.
+        If close_to_tray is on and tray is active: hide to tray.
+        Otherwise: save state and actually close.
 
-        This is why closing the window doesn't kill the app.
-        Click the X → window hides. Click "Quit" in tray → actually quits.
+        Configurable in velox.toml: [window] close_to_tray = true/false
         """
-        if self._tray and self._tray.isVisible() and not self._force_quit:
-            # Hide to tray instead of closing
+        close_to_tray = self._settings.get("window", "close_to_tray", True)
+
+        if close_to_tray and self._tray and self._tray.isVisible() and not self._force_quit:
             self._save_geometry()
             self.hide()
             event.ignore()
         else:
-            # Actually quitting
             self._save_state()
             event.accept()
 

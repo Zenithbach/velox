@@ -108,7 +108,7 @@ def main():
 
     # ─── Code Tools ──────────────────────────────────────────────────
 
-    code_tools = CodeTools(window.webview)
+    code_tools = CodeTools(window.webview, settings)
 
     # ─── Chat Export ─────────────────────────────────────────────────
 

@@ -29,30 +29,47 @@ class VeloxPage(QWebEnginePage):
     messages if we ever need to debug the frontend.
     """
 
-    def __init__(self, profile: QWebEngineProfile, parent=None):
+    def __init__(self, profile: QWebEngineProfile, settings=None, parent=None):
         super().__init__(profile, parent)
+        self._settings = settings
 
     # ─── Permission Handling ─────────────────────────────────────────────
 
     def permissionRequested(self, permission):
         """
         Handle permission requests from the web page.
-        Microphone: ✅ (for claude.ai voice input)
-        Camera: ❌ (you don't need to show Claude your face)
-        Everything else: ❌ by default
+        Each permission type is individually toggleable in velox.toml
+        under [permissions]. Users can lock down whatever they want.
+
+        Defaults: mic ✅, clipboard ✅, notifications ✅,
+                  screen capture ✅, camera ❌, geolocation ❌
         """
-        # QWebEnginePermission.PermissionType
         ptype = permission.permissionType()
 
-        # Import here to avoid circular issues
         from PyQt6.QtWebEngineCore import QWebEnginePermission
+        PT = QWebEnginePermission.PermissionType
 
-        if ptype == QWebEnginePermission.PermissionType.MediaAudioCapture:
-            permission.grant()
-        elif ptype == QWebEnginePermission.PermissionType.ClipboardReadWrite:
-            permission.grant()
+        # Map Qt permission types to config keys
+        permission_map = {
+            PT.MediaAudioCapture: "microphone",
+            PT.ClipboardReadWrite: "clipboard",
+            PT.Notifications: "notifications",
+            PT.DesktopVideoCapture: "screen_capture",
+            PT.DesktopAudioVideoCapture: "screen_capture",
+            PT.MediaVideoCapture: "camera",
+            PT.Geolocation: "geolocation",
+        }
+
+        config_key = permission_map.get(ptype)
+
+        if config_key and self._settings:
+            allowed = self._settings.get("permissions", config_key, False)
+            if allowed:
+                permission.grant()
+            else:
+                permission.deny()
         else:
-            # Camera, geolocation, notifications from web, etc. → nope.
+            # Unknown permission type → deny by default
             permission.deny()
 
     def createWindow(self, window_type):
@@ -121,7 +138,7 @@ class VeloxWebView(QWebEngineView):
 
         # ─── Custom Page ─────────────────────────────────────────────
 
-        self._page = VeloxPage(self._profile, self)
+        self._page = VeloxPage(self._profile, settings=self._settings, parent=self)
         self.setPage(self._page)
 
         # ─── WebEngine Settings ──────────────────────────────────────
@@ -158,15 +175,16 @@ class VeloxWebView(QWebEngineView):
 
     def start(self):
         """
-        Load cookies and navigate to claude.ai.
+        Load cookies and navigate to claude.ai (or whatever URL is configured).
         Call this after the window is set up.
         """
-        # Load saved cookies BEFORE navigating so the session is ready
         self._cookie_manager.load()
 
-        # Here we go. 🦋
-        self.load(QUrl(CLAUDE_URL))
-        print(f"🌐 Loading {CLAUDE_URL}")
+        # Start URL is configurable for enterprise Claude or testing
+        url = self._settings.get("advanced", "start_url", CLAUDE_URL)
+
+        self.load(QUrl(url))
+        print(f"🌐 Loading {url}")
 
     def get_zoom(self) -> float:
         """Get current zoom level for saving to config."""
@@ -197,6 +215,42 @@ class VeloxWebView(QWebEngineView):
         self._cookie_manager.clear()
         self.load(QUrl(CLAUDE_URL))
         print("🔓 Logged out. All cookies cleared.")
+
+    def clear_site_data(self):
+        """
+        The "have you tried turning it off and on again" button.
+        Clears cookies, local storage, cache, and session data.
+        Then reloads. You'll need to log in again.
+
+        Use this when claude.ai gets stuck in a weird state
+        (like the "message not sent" ghost that won't go away).
+        Won't fix server-side issues, but clears everything client-side.
+        """
+        # Clear cookies
+        self._cookie_manager.clear()
+
+        # Clear all browsing data through the profile
+        from PyQt6.QtWebEngineCore import QWebEngineProfile
+        self._profile.clearAllVisitedLinks()
+        self._profile.clearHttpCache()
+
+        # Nuke local storage and IndexedDB via JavaScript
+        js = """
+        (function() {
+            try { localStorage.clear(); } catch(e) {}
+            try { sessionStorage.clear(); } catch(e) {}
+            try {
+                indexedDB.databases().then(dbs => {
+                    dbs.forEach(db => indexedDB.deleteDatabase(db.name));
+                });
+            } catch(e) {}
+        })();
+        """
+        self.page().runJavaScript(js)
+
+        # Reload from scratch
+        self.load(QUrl(CLAUDE_URL))
+        print("🧹 Site data cleared. Fresh start. You'll need to log in again.")
 
     @property
     def cookie_manager(self) -> CookieManager:

@@ -16,6 +16,7 @@
 import json
 import threading
 from datetime import datetime
+from pathlib import Path
 
 from PyQt6.QtCore import QObject, QTimer
 
@@ -76,6 +77,9 @@ class ChatSummarizer(QObject):
         self._enabled = settings.get("summarizer", "enabled", True)
         self._delay = settings.get("summarizer", "delay_seconds", 30) * 1000  # ms
         self._model = settings.get("summarizer", "model", "claude-haiku-4-5-20251001")
+        self._summary_dir = Path(
+            settings.get("summarizer", "directory", str(SUMMARY_DIR))
+        )
 
         self._last_content_hash = ""
         self._pending_content = ""
@@ -91,7 +95,7 @@ class ChatSummarizer(QObject):
         self._poll_timer.timeout.connect(self._poll_for_changes)
 
         # Ensure summary directory exists
-        SUMMARY_DIR.mkdir(parents=True, exist_ok=True)
+        self._summary_dir.mkdir(parents=True, exist_ok=True)
 
         if not ANTHROPIC_AVAILABLE:
             print("🧠 Summarizer: 'anthropic' package not installed. Summaries disabled.")
@@ -261,7 +265,7 @@ class ChatSummarizer(QObject):
         safe_title = re.sub(r'\s+', '-', safe_title)[:60].strip('-') or "chat"
 
         filename = f"{date_str}_{safe_title}_summary.md"
-        filepath = SUMMARY_DIR / filename
+        filepath = self._summary_dir / filename
 
         # Build the entry
         entry = f"\n## Updated: {time_str}\n\n{summary}\n\n---\n"

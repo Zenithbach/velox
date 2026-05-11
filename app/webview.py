@@ -118,10 +118,21 @@ class VeloxWebView(QWebEngineView):
         # User agent: look like a normal browser
         self._profile.setHttpUserAgent(USER_AGENT)
 
-        # CRITICAL: Disable all caching.
-        # We don't want chat content sitting on disk in a cache somewhere.
-        # The only persistent data should be cookies (which we manage).
-        self._profile.setHttpCacheType(QWebEngineProfile.HttpCacheType.NoCache)
+        # Cache configuration — configurable for the speed vs privacy trade-off.
+        # Enabled by default: caches static assets (JS, CSS, fonts) for faster loads.
+        # Does NOT cache chat content (those have no-cache headers from the API).
+        # Disable in config if you want maximum privacy at the cost of speed.
+        cache_enabled = settings.get("security", "http_cache_enabled", True)
+        cache_size_mb = settings.get("security", "http_cache_size_mb", 100)
+
+        if cache_enabled:
+            self._profile.setHttpCacheType(QWebEngineProfile.HttpCacheType.DiskHttpCache)
+            if cache_size_mb > 0:
+                self._profile.setHttpCacheMaximumSize(cache_size_mb * 1024 * 1024)
+            print(f"💨 HTTP cache enabled ({cache_size_mb}MB max)")
+        else:
+            self._profile.setHttpCacheType(QWebEngineProfile.HttpCacheType.NoCache)
+            print("🔒 HTTP cache disabled (maximum privacy, slower loads)")
 
         # Disable spell checking (don't need it, don't want the data)
         self._profile.setSpellCheckEnabled(False)
@@ -229,8 +240,7 @@ class VeloxWebView(QWebEngineView):
         # Clear cookies
         self._cookie_manager.clear()
 
-        # Clear all browsing data through the profile
-        from PyQt6.QtWebEngineCore import QWebEngineProfile
+        # Clear HTTP cache and browsing data
         self._profile.clearAllVisitedLinks()
         self._profile.clearHttpCache()
 

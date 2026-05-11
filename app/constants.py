@@ -147,6 +147,8 @@ DEFAULT_CONFIG = {
     # 🔒 Security — the bouncer settings
     "security": {
         "log_blocked_requests": False,
+        "http_cache_enabled": True,     # 💨 Cache static assets (JS, CSS, fonts) for speed
+        "http_cache_size_mb": 100,      # 📦 Max cache size in MB (0 = unlimited)
     },
     # 🛡️ Permissions — what claude.ai is allowed to access
     "permissions": {

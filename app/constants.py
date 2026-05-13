@@ -12,7 +12,7 @@ from pathlib import Path
 # ─── Identity ────────────────────────────────────────────────────────────────
 
 APP_NAME = "Velox"
-APP_VERSION = "0.1.0"
+APP_VERSION = "2.0.0"
 APP_DESCRIPTION = "A window to Claude. Nothing more, nothing less."
 APP_URL = "https://github.com/Zenithbach/velox"
 
@@ -34,6 +34,17 @@ SUMMARY_DIR = CHAT_EXPORT_DIR / "summaries"
 
 # Downloads — not your browser's junk drawer
 DOWNLOAD_DIR = Path.home() / "Downloads" / "Velox"
+
+# 📚 v2: Where organized chat folders go (auto-extracted, tagged, indexed)
+CHAT_ARCHIVE_DIR = Path.home() / "Documents" / "Claude-Chats"
+
+# ─── Tagger Configuration ───────────────────────────────────────────────────
+# Controls for the zero-dependency keyword extractor.
+# These are the defaults — override in velox.toml under [tagger].
+
+MAX_TAGS = 8           # 🏷️ Maximum tags to extract per file
+MAX_TOPICS = 5         # 📚 Maximum topic clusters per file
+MIN_WORD_LENGTH = 3    # 📏 Minimum word length for keyword extraction
 
 # ─── Security: The Guest List ────────────────────────────────────────────────
 # If a domain isn't here, it doesn't get through. Period.
@@ -130,6 +141,19 @@ ABOUT_TAGLINES = [
     "Latin for swift. And we meant it.",
 ]
 
+# 📂 v2: Messages for the download organizer
+# Shown in the terminal when files are organized.
+ORGANIZER_MESSAGES = [
+    "📂 Your downloads have been given a purpose in life.",
+    "🏷️ Tagged, bagged, and ready for future-you.",
+    "📖 INDEX.md generated. You're welcome, three-days-from-now-you.",
+    "🗂️ From chaos to clarity. Executive function as a service.",
+    "📚 Filed under: things you'll actually find later.",
+    "🔖 Your Obsidian vault just got a care package.",
+    "📋 Organized with unreasonable care.",
+    "🦋 Another folder that explains itself. You're welcome.",
+]
+
 # ─── Default Config ──────────────────────────────────────────────────────────
 # These are the sane defaults that get written on first launch.
 # The actual config file is velox.toml — this is just the template.
@@ -162,6 +186,35 @@ DEFAULT_CONFIG = {
     # 📥 Downloads — where your artifacts land
     "downloads": {
         "directory": str(DOWNLOAD_DIR),
+    },
+    # 📂 Smart Downloads — v2
+    # Automatically organize downloads into named, tagged folders.
+    # Every zip gets extracted, every .md file gets YAML frontmatter,
+    # every folder gets an INDEX.md so future-you knows what's inside.
+    "downloads_v2": {
+        # 📚 Where organized chat folders land
+        # Each chat gets its own folder with an INDEX.md
+        "chat_archive": str(CHAT_ARCHIVE_DIR),
+        # 🤖 Auto-organize downloaded zips into named folders?
+        # true = zips get extracted, tagged, and indexed automatically
+        # false = downloads land in the regular download directory as-is
+        "auto_organize": True,
+        # 🕐 Prepend date to folder names?
+        # true = "2026-05-12_My-Chat-Title"
+        # false = "My-Chat-Title"
+        "timestamp_prefix": True,
+        # 🏷️ Auto-tag markdown files with YAML frontmatter?
+        # Enables Obsidian search, Dataview queries, and grep-friendly exports
+        "auto_tag": True,
+        # 📖 Generate INDEX.md in each export folder?
+        # The "open this first" file that maps everything in the folder
+        "generate_index": True,
+    },
+    # 🏷️ Tagger — keyword extraction and frontmatter settings
+    "tagger": {
+        "max_tags": MAX_TAGS,               # 🏷️ Tags per file
+        "max_topics": MAX_TOPICS,           # 📚 Topic clusters per file
+        "min_word_length": MIN_WORD_LENGTH,  # 📏 Shortest word to consider
     },
     # 🔲 Tray — the little icon in your panel
     "tray": {

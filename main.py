@@ -22,7 +22,7 @@ import os
 
 os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS",
     "--enable-gpu-rasterization "
-    "--enable-features=VaapiVideoDecoder,WebRTCPipeWireCapturer  "
+    "--enable-features=VaapiVideoDecoder "
     "--enable-wayland-ime"
 )
 

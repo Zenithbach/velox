@@ -275,3 +275,26 @@ class VeloxWebView(QWebEngineView):
     def save_state(self):
         """Save any persistent state (zoom level, etc.) to settings."""
         self._settings.set("zoom", "level", self.zoomFactor())
+
+    # ─── Context Menu ────────────────────────────────────────────────────
+
+    def contextMenuEvent(self, event):
+        """
+        Custom right-click menu — copy/paste only.
+        No back/forward because accidentally navigating away
+        from a long chat is a special kind of heartbreak.
+
+        🚫 "Back button disabled. Your conversation is safe."
+        """
+        from PyQt6.QtWidgets import QMenu
+
+        menu = QMenu(self)
+
+        # Only the actions that make sense for a chat window
+        menu.addAction(self.pageAction(QWebEnginePage.WebAction.Copy))
+        menu.addAction(self.pageAction(QWebEnginePage.WebAction.Cut))
+        menu.addAction(self.pageAction(QWebEnginePage.WebAction.Paste))
+        menu.addSeparator()
+        menu.addAction(self.pageAction(QWebEnginePage.WebAction.SelectAll))
+
+        menu.popup(event.globalPos())
